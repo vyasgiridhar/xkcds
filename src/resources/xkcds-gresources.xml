@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+    <gresource prefix="xyz/vyasgiridhar/xkcds/">
+        <file preprocess="xml-stripblanks">xkcds-window.ui</file>
+    </gresource>
+</gresources>
