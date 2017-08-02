@@ -20,8 +20,9 @@
 #define XKCD_API_H
 
 #include <glib-object.h>
+#include <json-glib-1.0/json-glib/json-glib.h>
 #include <libsoup/soup.h>
-
+#include <gtk/gtk.h>
 #include "xkcd.h"
 
 G_BEGIN_DECLS

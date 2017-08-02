@@ -97,14 +97,38 @@ Xkcd* xkcd_api_get_random (XkcdApi *self)
 {
     Xkcd *xkcd = xkcd_new ();
     XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
-    int random = g_random_int () % 1800; 
-    
     gchar *url = "";
-    g_snprintf (url, 100,"%s/%d/info.0.json", XKCD_API_URL, random);
+    int random = g_random_int () % 1800; 
+    gint status; 
+    
+    url = g_strdup_printf ("%s/%d/info.0.json", XKCD_API_URL, random);
 
+    SoupMessage *msg = soup_message_new ("GET", url);
+    status = soup_session_send_message (priv->sesh, msg);
+
+    JsonParser *parser = json_parser_new ();
+    json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
+    
+    JsonNode *root = json_parser_get_root(parser);
+    xkcd = XKCD_TYPE (json_gobject_deserialize (XKCD_TYPE_, root));
     
     g_free (url);
     return xkcd;
+}
+
+GdkPixbuf* xkcd_api_get_image (XkcdApi *self, Xkcd *xkcd)
+{
+    GdkPixbuf *image;
+    char *url;
+    
+    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
+    
+    g_object_get (xkcd, "img", &url, NULL);
+
+    SoupMessage *msg = soup_message_new("GET", url);
+    soup_session_send_message (priv->sesh, msg);
+//    gdk_pixbuf_new_from_stream 
+    return image;
 }
 static void
 xkcd_api_init (XkcdApi *self)
@@ -112,11 +136,4 @@ xkcd_api_init (XkcdApi *self)
     XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);    
 
     priv->sesh = soup_session_new();
-
-    SoupMessage *msg;
-
-    msg = soup_message_new ("GET", "http://xkcd.com/info.0.json");
-    guint status = soup_session_send_message (priv->sesh, msg);
-    g_debug ("%d\n\n%s", status, msg->response_body->data);
-//    SoupMessageBody *body = g_object_get (msg, "response-body");
 }

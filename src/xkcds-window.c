@@ -113,6 +113,8 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
 static void
 xkcds_window_init (XkcdsWindow *self)
 {
+    gchar *alt = "";
+    gchar *img = "";
     XkcdsWindowPrivate *priv = xkcds_window_get_instance_private (self);
     gtk_widget_init_template (GTK_WIDGET (self));
 
@@ -120,5 +122,12 @@ xkcds_window_init (XkcdsWindow *self)
     gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->spinner);
     
     XkcdApi *api_ref= xkcd_api_new();
+    Xkcd *xkcd = xkcd_api_get_random (api_ref);
+    g_object_get (xkcd, "alt", &alt, NULL);
+    g_object_get (xkcd, "img", &img, NULL); 
+    g_debug ("\n%s\n", alt);
+    g_debug ("\n%s\n", img);
+    g_free (alt);
+    g_free (img);
     //gtk_image_set_from_resource (GTK_IMAGE (priv->imageview), "/xyz/vyasgiridhar/xkcds/random.png");
 }

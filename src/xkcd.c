@@ -36,7 +36,7 @@ typedef struct
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd, G_TYPE_OBJECT)
 
 enum {
-    PROP_MONTH,
+    PROP_MONTH = 1,
     PROP_NUM,
     PROP_LINK,
     PROP_YEAR,
@@ -50,7 +50,7 @@ enum {
     N_PROPS
 };
 
-static GParamSpec *properties [N_PROPS];
+static GParamSpec *properties [N_PROPS]  = {NULL,};
 
 Xkcd *
 xkcd_new (void)
@@ -84,7 +84,7 @@ xkcd_get_property (GObject    *object,
                    GValue     *value,
                    GParamSpec *pspec)
 {
-    Xkcd *self = XKCD (object);
+    Xkcd *self = XKCD_TYPE (object);
     XkcdPrivate *priv = xkcd_get_instance_private (self);
 
     switch (prop_id)
@@ -133,7 +133,7 @@ xkcd_set_property (GObject      *object,
                    const GValue *value,
                    GParamSpec   *pspec)
 {
-    Xkcd *self = XKCD (object);
+    Xkcd *self = XKCD_TYPE (object);
     XkcdPrivate *priv = xkcd_get_instance_private (self);
 
     switch (prop_id)

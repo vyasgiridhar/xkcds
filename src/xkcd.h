@@ -30,7 +30,7 @@ struct _Xkcd
     GObject parent;
 };
 
-G_DECLARE_FINAL_TYPE (Xkcd, xkcd, XKCD, , GObject)
+G_DECLARE_FINAL_TYPE (Xkcd, xkcd, XKCD, TYPE, GObject)
 
 Xkcd *xkcd_new (void);
 
