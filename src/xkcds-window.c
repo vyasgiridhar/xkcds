@@ -118,7 +118,7 @@ xkcds_window_init (XkcdsWindow *self)
 
     gtk_spinner_start (GTK_SPINNER (priv->spinner));
     gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->spinner);
-    g_debug("HI");
+    
     XkcdApi *api_ref= xkcd_api_new();
     //gtk_image_set_from_resource (GTK_IMAGE (priv->imageview), "/xyz/vyasgiridhar/xkcds/random.png");
 }

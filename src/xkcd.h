@@ -1,4 +1,4 @@
-/* xkcd-api.h
+/* xkcd.h
  *
  * Copyright (C) 2017 Vyas Giridharan <vyasgiridhar27@gmail.com>
  *
@@ -16,24 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XKCD_API_H
-#define XKCD_API_H
+#ifndef XKCD_H
+#define XKCD_H
 
 #include <glib-object.h>
-#include <libsoup/soup.h>
 
 G_BEGIN_DECLS
 
-#define XKCD_API_URL 
-#define XKCD_TYPE_API (xkcd_api_get_type())
+#define XKCD_TYPE_ (xkcd_get_type())
 
-G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
+G_DECLARE_FINAL_TYPE (Xkcd, xkcd, XKCD, , GObject)
 
-XkcdApi *xkcd_api_new (void);
+Xkcd *xkcd_new (void);
 
-//Xkcd xkcd_api_get_random ();
-//Xkcd xkcd_api_get (int num);
 G_END_DECLS
 
-#endif /* XKCD_API_H */
+#endif /* XKCD_H */
 

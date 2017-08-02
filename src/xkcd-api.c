@@ -102,8 +102,8 @@ xkcd_api_init (XkcdApi *self)
 
     SoupMessage *msg;
 
-    msg = soup_message_new ("GET", "https://google.com/");
+    msg = soup_message_new ("GET", "http://xkcd.com/info.0.json");
     guint status = soup_session_send_message (priv->sesh, msg);
-    g_debug ("%d", status);
+    g_debug ("%d\n\n%s", status, msg->response_body->data);
 //    SoupMessageBody *body = g_object_get (msg, "response-body");
 }
