@@ -93,6 +93,19 @@ xkcd_api_class_init (XkcdApiClass *klass)
     object_class->set_property = xkcd_api_set_property;
 }
 
+Xkcd* xkcd_api_get_random (XkcdApi *self)
+{
+    Xkcd *xkcd = xkcd_new ();
+    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
+    int random = g_random_int () % 1800; 
+    
+    gchar *url = "";
+    g_snprintf (url, 100,"%s/%d/info.0.json", XKCD_API_URL, random);
+
+    
+    g_free (url);
+    return xkcd;
+}
 static void
 xkcd_api_init (XkcdApi *self)
 {

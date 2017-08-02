@@ -22,17 +22,20 @@
 #include <glib-object.h>
 #include <libsoup/soup.h>
 
+#include "xkcd.h"
+
 G_BEGIN_DECLS
 
-#define XKCD_API_URL 
+#define XKCD_API_URL "https://xkcd.com"
 #define XKCD_TYPE_API (xkcd_api_get_type())
 
 G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
 
 XkcdApi *xkcd_api_new (void);
 
-//Xkcd xkcd_api_get_random ();
-//Xkcd xkcd_api_get (int num);
+Xkcd* xkcd_api_get_random (XkcdApi *self);
+Xkcd* xkcd_api_get_number (Xkcd *self, int num);
+
 G_END_DECLS
 
 #endif /* XKCD_API_H */

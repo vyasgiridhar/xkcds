@@ -18,11 +18,6 @@
 
 #include "xkcd.h"
 
-struct _Xkcd
-{
-    GObject parent;
-};
-
 typedef struct
 {
     gchar *month;
@@ -31,6 +26,7 @@ typedef struct
     gchar *year;
     gchar *news;
     gchar *safe_title;
+    gchar *transcript;
     gchar *alt;
     gchar *img;
     gchar *title;
@@ -46,6 +42,7 @@ enum {
     PROP_YEAR,
     PROP_NEWS,
     PROP_SAFE_TITLE,
+    PROP_TRANSCRIPT,
     PROP_ALT,
     PROP_IMG,
     PROP_TITLE,
@@ -66,6 +63,17 @@ xkcd_finalize (GObject *object)
 {
     Xkcd *self = (Xkcd *)object;
     XkcdPrivate *priv = xkcd_get_instance_private (self);
+
+    g_free (priv->month);
+    g_free (priv->link);
+    g_free (priv->year);
+    g_free (priv->news);
+    g_free (priv->safe_title);
+    g_free (priv->transcript);
+    g_free (priv->alt);
+    g_free (priv->img);
+    g_free (priv->title);
+    g_free (priv->day);
 
     G_OBJECT_CLASS (xkcd_parent_class)->finalize (object);
 }
@@ -98,6 +106,9 @@ xkcd_get_property (GObject    *object,
               break;
           case PROP_SAFE_TITLE:
               g_value_set_string (value, priv->safe_title);
+              break;
+          case PROP_TRANSCRIPT:
+              g_value_set_string (value, priv->transcript);
               break;
           case PROP_ALT:
               g_value_set_string (value, priv->alt);
@@ -144,6 +155,9 @@ xkcd_set_property (GObject      *object,
               break;
           case PROP_SAFE_TITLE:
               priv->safe_title = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_TRANSCRIPT:
+              priv->transcript = g_strdup (g_value_get_string (value));
               break;
           case PROP_ALT:
               priv->alt = g_strdup (g_value_get_string (value));
@@ -207,6 +221,12 @@ xkcd_class_init (XkcdClass *klass)
         g_param_spec_string ("safe_title",
                              "SafeTitle",
                              "Safe Title for the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
+    properties [PROP_TRANSCRIPT] =
+        g_param_spec_string ("transcript",
+                             "Transcript",
+                             "Transcript for the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_ALT] =

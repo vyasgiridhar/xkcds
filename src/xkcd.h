@@ -25,6 +25,11 @@ G_BEGIN_DECLS
 
 #define XKCD_TYPE_ (xkcd_get_type())
 
+struct _Xkcd
+{
+    GObject parent;
+};
+
 G_DECLARE_FINAL_TYPE (Xkcd, xkcd, XKCD, , GObject)
 
 Xkcd *xkcd_new (void);
