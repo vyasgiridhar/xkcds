@@ -123,9 +123,40 @@ xkcd_set_property (GObject      *object,
                    GParamSpec   *pspec)
 {
     Xkcd *self = XKCD (object);
+    XkcdPrivate *priv = xkcd_get_instance_private (self);
 
     switch (prop_id)
       {
+          case PROP_MONTH:
+              priv->month = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_NUM:
+              priv->num = g_value_get_int (value);
+              break;
+          case PROP_LINK:
+              priv->link = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_YEAR:
+              priv->year = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_NEWS:
+              priv->news = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_SAFE_TITLE:
+              priv->safe_title = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_ALT:
+              priv->alt = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_IMG:
+              priv->img = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_TITLE:
+              priv->title = g_strdup (g_value_get_string (value));
+              break;
+          case PROP_DAY:
+              priv->day = g_strdup (g_value_get_string (value));
+              break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       }
@@ -141,67 +172,69 @@ xkcd_class_init (XkcdClass *klass)
     object_class->set_property = xkcd_set_property;
 
     properties [PROP_MONTH] =
-        g_param_spec_object ("month",
+        g_param_spec_string ("month",
                              "Month",
                              "Month of the XKCD post",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_NUM] =
-        g_param_spec_object ("num",
-                             "Num",
-                             "Number of the XKCD",
-                             0,
-                             G_PARAM_READWRITE);
+        g_param_spec_int  ("num",
+                           "Num",
+                           "Number of the XKCD",
+                           0,
+                           10000000,
+                           0,
+                           G_PARAM_READWRITE);
     properties [PROP_LINK] =
-        g_param_spec_object ("link",
+        g_param_spec_string ("link",
                              "Link",
                              "Link to the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_YEAR] =
-        g_param_spec_object ("year",
+        g_param_spec_string ("year",
                              "Year",
                              "Year of the posting",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_NEWS] =
-        g_param_spec_object ("news",
+        g_param_spec_string ("news",
                              "News",
                              "News about the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_SAFE_TITLE] =
-        g_param_spec_object ("safe_title",
+        g_param_spec_string ("safe_title",
                              "SafeTitle",
                              "Safe Title for the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_ALT] =
-        g_param_spec_object ("alt",
+        g_param_spec_string ("alt",
                              "Alt",
                              "Alt text for the image",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_IMG] =
-        g_param_spec_object ("img",
+        g_param_spec_string ("img",
                              "Img",
                              "Img link to the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_TITLE] =
-        g_param_spec_object ("title",
+        g_param_spec_string ("title",
                              "Title",
                              "Title for the XKCD",
                              NULL,
                              G_PARAM_READWRITE);
     properties [PROP_DAY] =
-        g_param_spec_object ("day",
+        g_param_spec_string ("day",
                              "Day",
                              "Day of the XKCD posting",
                              NULL,
                              G_PARAM_READWRITE);
 
-    g_class_object_install_properties (object_class,
+    g_object_class_install_properties (object_class,
                                        N_PROPS,
                                        properties);
 }
