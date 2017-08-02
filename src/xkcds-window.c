@@ -17,6 +17,7 @@
  */
 
 #include "xkcds-window.h"
+#include "xkcd-api.h"
 
 struct _XkcdsWindow
 {
@@ -30,7 +31,9 @@ typedef struct
     GtkWidget *random;
     GtkWidget *next;
     GtkWidget *prev;
-
+    GtkWidget *stack;
+    GtkWidget *image_event;
+    GtkWidget *spinner;
     GList *cache;
     GdkPixbuf *Image;
 } XkcdsWindowPrivate;
@@ -94,12 +97,12 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-    gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (object_class), "xyz/vyasgiridhar/xkcds/xkcds-window.ui");
+    gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (object_class), "/xyz/vyasgiridhar/xkcds/xkcds-window.ui");
 
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, imageview);
-    //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, download);
-    //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, random);
-    //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASs (object_class), XkcdsWindow, next);
+    gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, stack);
+    gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, image_event);
+    gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, spinner);
     //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASs (object_class), XkcdsWindow, prev);
 
     object_class->finalize = xkcds_window_finalize;
@@ -110,4 +113,12 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
 static void
 xkcds_window_init (XkcdsWindow *self)
 {
+    XkcdsWindowPrivate *priv = xkcds_window_get_instance_private (self);
+    gtk_widget_init_template (GTK_WIDGET (self));
+
+    gtk_spinner_start (GTK_SPINNER (priv->spinner));
+    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->spinner);
+    g_debug("HI");
+    XkcdApi *api_ref= xkcd_api_new();
+    //gtk_image_set_from_resource (GTK_IMAGE (priv->imageview), "/xyz/vyasgiridhar/xkcds/random.png");
 }

@@ -2,22 +2,21 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.10"/>
-  <template class="XkcdWindow" parent="GtkApplicationWindow">
+  <template class="XkcdsWindow" parent="GtkApplicationWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Louder</property>
     <property name="default_width">1000</property>
     <property name="default_height">600</property>
     <child>
-      <object class="GtkStack">
+      <object class="GtkStack" id="stack">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkEventBox">
+          <object class="GtkEventBox" id="image_event">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkImage">
-                <property name="visible">True</property>
+              <object class="GtkImage" id="imageview">
                 <property name="can_focus">False</property>
                 <property name="stock">gtk-missing-image</property>
               </object>
@@ -26,6 +25,19 @@
           <packing>
             <property name="name">page0</property>
             <property name="title" translatable="yes">page0</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinner" id="spinner">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="active">True</property>
+          </object>
+          <packing> 
+            <property name="name">page1</property>
+            <property name="title" translatable="yes">page1</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </object>
