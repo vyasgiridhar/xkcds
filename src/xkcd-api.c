@@ -106,6 +106,10 @@ Xkcd* xkcd_api_get_random (XkcdApi *self)
     SoupMessage *msg = soup_message_new ("GET", url);
     status = soup_session_send_message (priv->sesh, msg);
 
+    if (status != 200) {
+        return NULL;
+    }
+
     JsonParser *parser = json_parser_new ();
     json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
     
@@ -116,24 +120,57 @@ Xkcd* xkcd_api_get_random (XkcdApi *self)
     return xkcd;
 }
 
-GdkPixbuf* xkcd_api_get_image (XkcdApi *self, Xkcd *xkcd)
+static void
+callback (GObject *object, GAsyncResult *result, gpointer data)
+{
+    GError *error = NULL;
+    GFileInputStream *stream;
+    GtkStack *stack = GTK_STACK (data);
+
+    stream = g_file_read_finish (G_FILE (object), result, &error);
+    if (stream == NULL)
+    {
+        g_warning ("Fuck");
+    }
+    GdkPixbuf *image = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), NULL, error); 
+//    gtk_stack_get_child_by_name (stack, 
+
+}
+int xkcd_api_get_image (GtkStack *stack, XkcdApi *self, Xkcd *xkcd)
 {
     GdkPixbuf *image;
+    GdkPixbufLoader *loader;
+    GError *error = NULL;
     char *url;
-    
+    loader = gdk_pixbuf_loader_new();
+
     XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
     
     g_object_get (xkcd, "img", &url, NULL);
 
-    SoupMessage *msg = soup_message_new("GET", url);
-    soup_session_send_message (priv->sesh, msg);
-//    gdk_pixbuf_new_from_stream 
+/*    SoupMessage *msg = soup_message_new("GET", url);
+    soup_session_send_async (priv->sesh, msg, NULL, );
+
+    gdk_pixbuf_loader_write (loader,
+                             (const guchar*) msg->response_body->data,
+                             msg->response_body->length,
+                             &error);
+    if (error) {
+        g_warning ("Unable to load");
+        g_error_free (error);
+    }
+    image = gdk_pixbuf_loader_get_pixbuf (loader);
     return image;
+*/
+    GFile *img = g_file_new_for_uri (url);
+    g_file_read_async (img, G_PRIORITY_HIGH, NULL, callback, stack);
+    g_free (url);
+    return 1;
 }
 static void
 xkcd_api_init (XkcdApi *self)
 {
     XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);    
 
-    priv->sesh = soup_session_new();
+    priv->sesh = soup_session_new ();
 }

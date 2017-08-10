@@ -34,9 +34,9 @@ G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
 
 XkcdApi *xkcd_api_new (void);
 
-Xkcd* xkcd_api_get_random (XkcdApi *self);
-Xkcd* xkcd_api_get_number (Xkcd *self, int num);
-
+Xkcd*      xkcd_api_get_random (XkcdApi *self);
+Xkcd*      xkcd_api_get_number (XkcdApi *self, int num);
+int xkcd_api_get_image  (GtkStack *stack, XkcdApi *self, Xkcd *xkcd);
 G_END_DECLS
 
 #endif /* XKCD_API_H */

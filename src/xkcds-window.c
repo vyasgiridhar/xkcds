@@ -119,7 +119,7 @@ xkcds_window_init (XkcdsWindow *self)
     gtk_widget_init_template (GTK_WIDGET (self));
 
     gtk_spinner_start (GTK_SPINNER (priv->spinner));
-    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->spinner);
+//    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->image_event);
     
     XkcdApi *api_ref= xkcd_api_new();
     Xkcd *xkcd = xkcd_api_get_random (api_ref);
@@ -129,5 +129,8 @@ xkcds_window_init (XkcdsWindow *self)
     g_debug ("\n%s\n", img);
     g_free (alt);
     g_free (img);
+    gtk_image_set_from_pixbuf (GTK_IMAGE (priv->imageview), xkcd_api_get_image (api_ref, xkcd));
+    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->image_event);
+    gtk_widget_show_all (GTK_WIDGET (self));
     //gtk_image_set_from_resource (GTK_IMAGE (priv->imageview), "/xyz/vyasgiridhar/xkcds/random.png");
 }
