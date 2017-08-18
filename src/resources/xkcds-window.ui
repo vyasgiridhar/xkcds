@@ -15,6 +15,7 @@
           <object class="GtkEventBox" id="image_event">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="name">image_event</property>
             <child>
               <object class="GtkImage" id="imageview">
                 <property name="can_focus">False</property>
@@ -33,6 +34,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="active">True</property>
+            <property name="name">spinner</property>
           </object>
           <packing> 
             <property name="name">page1</property>
