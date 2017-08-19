@@ -1,6 +1,7 @@
 xkcd_sources = [
     'xkcds-application.c',
     'xkcds-window.c',
+    'xkcd-imageview.c',
     'xkcd.c',
     'xkcd-api.c',
     'main.c',
@@ -18,6 +19,8 @@ resources = gnome.compile_resources ('xkcd-resources',
 xkcd_sources += resources
 
 executable ('xkcd', xkcd_sources,
+    include_directories : include_directories('../libgtkimageview/'),
     dependencies: xkcd_deps,
+    link_with: libgtkimageview,
     install: true
 )

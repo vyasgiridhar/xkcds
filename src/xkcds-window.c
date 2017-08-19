@@ -18,6 +18,7 @@
 
 #include "xkcds-window.h"
 #include "xkcd-api.h"
+#include "xkcd-imageview.h"
 
 struct _XkcdsWindow
 {
@@ -26,13 +27,12 @@ struct _XkcdsWindow
 
 typedef struct
 {
-    GtkWidget *imageview;
+    XkcdImageview *imageview;
     GtkWidget *download;
     GtkWidget *random;
     GtkWidget *next;
     GtkWidget *prev;
     GtkWidget *stack;
-    GtkWidget *image_event;
     GtkWidget *spinner;
     GList *cache;
     GdkPixbuf *Image;
@@ -97,11 +97,12 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+    g_type_ensure (XKCD_TYPE_IMAGEVIEW);
+
     gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (object_class), "/xyz/vyasgiridhar/xkcds/xkcds-window.ui");
 
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, imageview);
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, stack);
-    gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, image_event);
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, spinner);
     //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASs (object_class), XkcdsWindow, prev);
 
@@ -119,7 +120,7 @@ xkcds_window_init (XkcdsWindow *self)
     gtk_widget_init_template (GTK_WIDGET (self));
 
     gtk_spinner_start (GTK_SPINNER (priv->spinner));
-//    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->image_event);
+    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->spinner);
     
     XkcdApi *api_ref= xkcd_api_new();
     Xkcd *xkcd = xkcd_api_get_random (api_ref);
@@ -130,7 +131,7 @@ xkcds_window_init (XkcdsWindow *self)
     g_free (alt);
     g_free (img);
     xkcd_api_get_image (api_ref, xkcd, GTK_STACK (priv->stack));
-    gtk_stack_set_visible_child (GTK_STACK (priv->stack), priv->image_event);
+  //  gtk_stack_set_visible_child (GTK_STACK (priv->stack), GTK_WIDGET (priv->imageview));
     gtk_widget_show_all (GTK_WIDGET (self));
     //gtk_image_set_from_resource (GTK_IMAGE (priv->imageview), "/xyz/vyasgiridhar/xkcds/random.png");
 }

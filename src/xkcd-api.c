@@ -17,6 +17,7 @@
  */
 
 #include "xkcd-api.h"
+#include "../libgtkimageview/gtkimageview.h"
 
 struct _XkcdApi
 {
@@ -141,7 +142,7 @@ callback (SoupSession *sesh, SoupMessage *msg, gpointer data)
     }
     image = gdk_pixbuf_loader_get_pixbuf (loader);
 
-    GtkWidget *event_box = gtk_stack_get_child_by_name (stack, "image_event");
+    GtkWidget *imageview = gtk_stack_get_child_by_name (stack, "imageview");
 }
 int xkcd_api_get_image (XkcdApi *self, Xkcd *xkcd, GtkStack *stack)
 {

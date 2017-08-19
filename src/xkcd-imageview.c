@@ -17,6 +17,7 @@
  */
 
 #include "xkcd-imageview.h"
+#include "../libgtkimageview/gtkimageview.h"
 
 struct _XkcdImageview
 {
@@ -24,8 +25,8 @@ struct _XkcdImageview
 };
 
 typedef struct {
-    GtkEventBox image_event;
-    GtkImage    image;
+    GtkEventBox *image_event;
+    GtkImageView    *image;
 } XkcdImageviewPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (XkcdImageview, xkcd_imageview, GTK_TYPE_BIN)
@@ -86,7 +87,9 @@ xkcd_imageview_class_init (XkcdImageviewClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-    gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (klass), "/xyz/vyasgiridhar/xkcd/xkcd-imageview.ui");
+    g_type_ensure (GTK_TYPE_IMAGE_VIEW);
+    
+    gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (klass), "/xyz/vyasgiridhar/xkcds/xkcds-imageview.ui");
 
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass), XkcdImageview, image_event);
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (klass), XkcdImageview, image);
@@ -99,5 +102,9 @@ xkcd_imageview_class_init (XkcdImageviewClass *klass)
 static void
 xkcd_imageview_init (XkcdImageview *self)
 {
+    XkcdImageviewPrivate *priv = xkcd_imageview_get_instance_private (self);
+    
     gtk_widget_init_template (GTK_WIDGET (self));
+    gtk_image_view_set_zoomable (priv->image, TRUE);
+
 }

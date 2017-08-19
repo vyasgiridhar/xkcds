@@ -12,19 +12,12 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
-          <object class="GtkEventBox" id="image_event">
+          <object class="XkcdImageview" id="imageview">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="name">image_event</property>
-            <child>
-              <object class="GtkImage" id="imageview">
-                <property name="can_focus">False</property>
-                <property name="stock">gtk-missing-image</property>
-              </object>
-            </child>
           </object>
           <packing>
-            <property name="name">page0</property>
+            <property name="name">imageview</property>
             <property name="title" translatable="yes">page0</property>
             <property name="position">1</property>
           </packing>
@@ -37,7 +30,7 @@
             <property name="name">spinner</property>
           </object>
           <packing> 
-            <property name="name">page1</property>
+            <property name="name">spinner</property>
             <property name="title" translatable="yes">page1</property>
             <property name="position">0</property>
           </packing>
