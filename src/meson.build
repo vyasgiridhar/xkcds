@@ -1,9 +1,9 @@
 xkcd_sources = [
     'xkcds-application.c',
     'xkcds-window.c',
-    'xkcd-imageview.c',
-    'xkcd.c',
+    'xkcds-image.c',
     'xkcd-api.c',
+    'xkcd.c',
     'main.c',
 ]
 

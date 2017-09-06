@@ -33,7 +33,7 @@ typedef struct
     gchar *day;
 } XkcdPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
 
 enum {
     PROP_MONTH = 1,
@@ -53,16 +53,16 @@ enum {
 static GParamSpec *properties [N_PROPS]  = {NULL,};
 
 Xkcd *
-xkcd_new (void)
+xkcd_object_new (void)
 {
-    return g_object_new (XKCD_TYPE_, NULL);
+    return g_object_new (XKCD_TYPE_OBJECT, NULL);
 }
 
 static void
-xkcd_finalize (GObject *object)
+xkcd_object_finalize (GObject *object)
 {
     Xkcd *self = (Xkcd *)object;
-    XkcdPrivate *priv = xkcd_get_instance_private (self);
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
     g_free (priv->month);
     g_free (priv->link);
@@ -75,17 +75,17 @@ xkcd_finalize (GObject *object)
     g_free (priv->title);
     g_free (priv->day);
 
-    G_OBJECT_CLASS (xkcd_parent_class)->finalize (object);
+    G_OBJECT_CLASS (xkcd_object_parent_class)->finalize (object);
 }
 
 static void
-xkcd_get_property (GObject    *object,
+xkcd_object_get_property (GObject    *object,
                    guint       prop_id,
                    GValue     *value,
                    GParamSpec *pspec)
 {
-    Xkcd *self = XKCD_TYPE (object);
-    XkcdPrivate *priv = xkcd_get_instance_private (self);
+    Xkcd *self = XKCD_OBJECT (object);
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
     switch (prop_id)
       {
@@ -128,13 +128,13 @@ xkcd_get_property (GObject    *object,
 }
 
 static void
-xkcd_set_property (GObject      *object,
+xkcd_object_set_property (GObject      *object,
                    guint         prop_id,
                    const GValue *value,
                    GParamSpec   *pspec)
 {
-    Xkcd *self = XKCD_TYPE (object);
-    XkcdPrivate *priv = xkcd_get_instance_private (self);
+    Xkcd *self = XKCD_OBJECT (object);
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
     switch (prop_id)
       {
@@ -177,13 +177,13 @@ xkcd_set_property (GObject      *object,
 }
 
 static void
-xkcd_class_init (XkcdClass *klass)
+xkcd_object_class_init (XkcdClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-    object_class->finalize = xkcd_finalize;
-    object_class->get_property = xkcd_get_property;
-    object_class->set_property = xkcd_set_property;
+    object_class->finalize = xkcd_object_finalize;
+    object_class->get_property = xkcd_object_get_property;
+    object_class->set_property = xkcd_object_set_property;
 
     properties [PROP_MONTH] =
         g_param_spec_string ("month",
@@ -260,6 +260,6 @@ xkcd_class_init (XkcdClass *klass)
 }
 
 static void
-xkcd_init (Xkcd *self)
+xkcd_object_init (Xkcd *self)
 {
 }

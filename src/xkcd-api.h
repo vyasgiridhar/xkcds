@@ -19,25 +19,24 @@
 #ifndef XKCD_API_H
 #define XKCD_API_H
 
-#include <glib-object.h>
-#include <json-glib-1.0/json-glib/json-glib.h>
-#include <libsoup/soup.h>
-#include <gtk/gtk.h>
 #include "xkcd.h"
+#include "xkcds-image.h"
+#include <glib-object.h>
+#include <libsoup/soup.h>
+#include <json-glib-1.0/json-glib/json-glib.h>
 
 G_BEGIN_DECLS
 
-#define XKCD_API_URL "https://xkcd.com"
+#define XKCD_URL "http://xkcd.com/%d/info.0.json"
 #define XKCD_TYPE_API (xkcd_api_get_type())
 
 G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
 
 XkcdApi *xkcd_api_new (void);
 
-Xkcd*      xkcd_api_get_random (XkcdApi *self);
-Xkcd*      xkcd_api_get_number (XkcdApi *self, int num);
-int xkcd_api_get_image  (XkcdApi *self, Xkcd *xkcd, GtkStack *stack);
+void
+xkcd_api_get_random (XkcdApi *self, XkcdsImage *image);
+
 G_END_DECLS
 
 #endif /* XKCD_API_H */
-

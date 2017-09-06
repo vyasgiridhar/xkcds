@@ -1,4 +1,4 @@
-/* xkcd-imageview.h
+/* xkcds-image.h
  *
  * Copyright (C) 2017 Vyas Giridharan <vyasgiridhar27@gmail.com>
  *
@@ -16,20 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XKCD_IMAGEVIEW_H
-#define XKCD_IMAGEVIEW_H
+#ifndef XKCDS_IMAGE_H
+#define XKCDS_IMAGE_H
 
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define XKCD_TYPE_IMAGEVIEW (xkcd_imageview_get_type())
+#define XKCDS_TYPE_IMAGE (xkcds_image_get_type())
 
-G_DECLARE_FINAL_TYPE (XkcdImageview, xkcd_imageview, XKCD, IMAGEVIEW, GtkBin)
+G_DECLARE_FINAL_TYPE (XkcdsImage, xkcds_image, XKCDS, IMAGE, GtkStack)
 
-XkcdImageview *xkcd_imageview_new (void);
+XkcdsImage *xkcds_image_new (void);
+
+void xkcds_image_randomize ();
 
 G_END_DECLS
 
-#endif /* XKCD_IMAGEVIEW_H */
-
+#endif /* XKCDS_IMAGE_H */

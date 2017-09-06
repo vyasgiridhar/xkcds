@@ -2,7 +2,7 @@
 <gresources>
     <gresource prefix="/xyz/vyasgiridhar/xkcds">
         <file preprocess="xml-stripblanks">xkcds-window.ui</file>
-        <file preprocess="xml-stripblanks">xkcds-imageview.ui</file>
+        <file preprocess="xml-stripblanks">xkcds-image.ui</file>
         <file>random.png</file>
     </gresource>
 </gresources>

@@ -17,20 +17,15 @@
  */
 
 #include "xkcd-api.h"
-#include "../libgtkimageview/gtkimageview.h"
+#include "xkcds-image.h"
 
 struct _XkcdApi
 {
-    GObject parent;
+    GObject parent_instance;
+    SoupSession *sesh;
 };
 
-typedef struct
-{
-    SoupSession *sesh;
-    int          random;
-} XkcdApiPrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (XkcdApi, xkcd_api, G_TYPE_OBJECT)
+G_DEFINE_TYPE (XkcdApi, xkcd_api, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
@@ -49,7 +44,6 @@ static void
 xkcd_api_finalize (GObject *object)
 {
     XkcdApi *self = (XkcdApi *)object;
-    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
 
     G_OBJECT_CLASS (xkcd_api_parent_class)->finalize (object);
 }
@@ -94,76 +88,49 @@ xkcd_api_class_init (XkcdApiClass *klass)
     object_class->set_property = xkcd_api_set_property;
 }
 
-Xkcd* xkcd_api_get_random (XkcdApi *self)
+static void
+xkcd_api_handle_error (XkcdsImage *image, int status)
 {
-    Xkcd *xkcd = xkcd_new ();
-    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
-    gchar *url = "";
-    int random = g_random_int () % 1800; 
-    gint status; 
-    
-    url = g_strdup_printf ("%s/%d/info.0.json", XKCD_API_URL, random);
+    g_warning ("status code: %d, Unable to fetch image", status);
+}
 
-    SoupMessage *msg = soup_message_new ("GET", url);
-    status = soup_session_send_message (priv->sesh, msg);
+void
+xkcd_api_get_random (XkcdApi *self, XkcdsImage *image)
+{
+    int random;
+    gchar* url;
+    SoupMessage *msg;
+    int status;
+    Xkcd *xkcd;
+    random = g_random_int () % 1800; 
 
+    url = g_strdup_printf (XKCD_URL, random);
+    msg = soup_message_new ("GET", url);
+
+    status = soup_session_send_message (self->sesh, msg);
     if (status != 200) {
-        return NULL;
+        xkcd_api_handle_error (image, status);
+        return;
     }
 
     JsonParser *parser = json_parser_new ();
     json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
-    
+
     JsonNode *root = json_parser_get_root(parser);
-    xkcd = XKCD_TYPE (json_gobject_deserialize (XKCD_TYPE_, root));
-    
+    xkcd = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
+/*
+    gchar *alt, *img;
+    g_object_get (xkcd, "alt", &alt, NULL);
+    g_object_get (xkcd, "img", &img, NULL); 
+    g_debug ("\n%s\n", alt);
+    g_debug ("\n%s\n", img);
+    g_free (alt);
+    g_free (img);
+*/
     g_free (url);
-    return xkcd;
-}
-
-static void
-callback (SoupSession *sesh, SoupMessage *msg, gpointer data)
-{
-    GError *error = NULL;
-    GtkStack *stack = GTK_STACK (data); 
-
-    GdkPixbuf *image;
-    GdkPixbufLoader *loader;
-
-    loader = gdk_pixbuf_loader_new();
-
-    gdk_pixbuf_loader_write (loader,
-                             (const guchar*) msg->response_body->data,
-                             msg->response_body->length,
-                             &error);
-    if (error) {
-        g_warning ("Unable to load");
-        g_error_free (error);
-    }
-    image = gdk_pixbuf_loader_get_pixbuf (loader);
-
-    GtkWidget *imageview = gtk_stack_get_child_by_name (stack, "imageview");
-}
-int xkcd_api_get_image (XkcdApi *self, Xkcd *xkcd, GtkStack *stack)
-{
-    GdkPixbuf *image;
-    GdkPixbufLoader *loader;
-    GError *error = NULL;
-    char *url;
-
-
-    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);
-    
-    g_object_get (xkcd, "img", &url, NULL);
-
-    SoupMessage *msg = soup_message_new("GET", url);
-    soup_session_queue_message (priv->sesh, msg,  callback, stack );
-    return 1;
 }
 static void
 xkcd_api_init (XkcdApi *self)
 {
-    XkcdApiPrivate *priv = xkcd_api_get_instance_private (self);    
-
-    priv->sesh = soup_session_new ();
+    self->sesh = soup_session_new ();
 }

@@ -1,66 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.20.0 -->
 <interface>
-  <requires lib="gtk+" version="3.10"/>
-  <template class="XkcdsWindow" parent="GtkApplicationWindow">
-    <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Louder</property>
-    <property name="default_width">1000</property>
-    <property name="default_height">600</property>
-    <child>
-      <object class="GtkStack" id="stack">
-        <property name="visible">True</property>
+    <requires lib="gtk+" version="3.10"/>
+    <template class="XkcdsWindow" parent="GtkApplicationWindow">
         <property name="can_focus">False</property>
+        <property name="title" translatable="yes">Louder</property>
+        <property name="default_width">1000</property>
+        <property name="default_height">600</property>
         <child>
-          <object class="XkcdImageview" id="imageview">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-          </object>
-          <packing>
-            <property name="name">imageview</property>
-            <property name="title" translatable="yes">page0</property>
-            <property name="position">1</property>
-          </packing>
+            <object class="XkcdsImage" id="xkcds_image">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+            </object>
         </child>
-        <child>
-          <object class="GtkSpinner" id="spinner">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="active">True</property>
-            <property name="name">spinner</property>
-          </object>
-          <packing> 
-            <property name="name">spinner</property>
-            <property name="title" translatable="yes">page1</property>
-            <property name="position">0</property>
-          </packing>
+        <child type="titlebar">
+            <object class="GtkHeaderBar" id="header">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="show_close_button">True</property>
+                <child>
+                    <object class="GtkMenuButton" id="gears">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="receives_default">False</property>
+                        <property name="direction">none</property>
+                        <child>
+                            <placeholder/>
+                        </child>
+                        <style>
+                            <class name="image-button"/>
+                        </style>
+                    </object>
+                    <packing>
+                        <property name="pack_type">end</property>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+            </object>
         </child>
-      </object>
-    </child>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="header">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="show_close_button">True</property>
-        <child>
-          <object class="GtkMenuButton" id="gears">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="receives_default">False</property>
-            <property name="direction">none</property>
-            <child>
-              <placeholder/>
-            </child>
-            <style>
-              <class name="image-button"/>
-            </style>
-          </object>
-          <packing>
-            <property name="pack_type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </template>
+    </template>
 </interface>

@@ -50,7 +50,9 @@ xkcds_application_new (void)
 static void
 xkcds_application_activate (GApplication *app)
 {
-    XkcdsWindow *window = xkcds_window_new (XKCDS_APPLICATION (app));
+    XkcdsWindow *window;
+
+    window = xkcds_window_new (XKCDS_APPLICATION (app));
 
     gtk_window_present (GTK_WINDOW (window));
 }
