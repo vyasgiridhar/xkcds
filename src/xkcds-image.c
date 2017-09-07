@@ -34,6 +34,7 @@ struct _XkcdsImage
     GtkWidget    *randomize;
 
     GSource      *overlay_timeout_source;
+    GCancellable *cancel_action;
 };
 
 G_DEFINE_TYPE (XkcdsImage, xkcds_image, GTK_TYPE_STACK)
@@ -161,7 +162,7 @@ void
 xkcds_image_randomize (XkcdsImage *self)
 {
     XkcdApi *api_ref= xkcd_api_new();
-    xkcd_api_get_random (api_ref, self);
+    xkcd_api_get_random (api_ref, self, NULL);
 }
 
 static void
@@ -193,7 +194,7 @@ xkcds_image_init (XkcdsImage *self)
     gtk_revealer_set_transition_type (GTK_REVEALER (self->left),
                                       GTK_REVEALER_TRANSITION_TYPE_CROSSFADE);
     gtk_revealer_set_transition_duration (GTK_REVEALER (self->left),
-                                      OVERLAY_REVEAL_ANIM_TIME);
+                                          OVERLAY_REVEAL_ANIM_TIME);
     gtk_widget_set_halign (self->left, GTK_ALIGN_START);
     gtk_widget_set_valign (self->left, GTK_ALIGN_CENTER);
     gtk_widget_set_margin_start (self->left, 12);
@@ -255,6 +256,5 @@ xkcds_image_init (XkcdsImage *self)
     g_signal_connect (self->overlay, "enter-notify-event",
                       G_CALLBACK (enter_overlay_cb),
                       self);
-
     gtk_stack_set_visible_child_name (GTK_STACK (self), "imageview");
 }

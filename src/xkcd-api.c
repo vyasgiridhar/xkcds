@@ -45,6 +45,8 @@ xkcd_api_finalize (GObject *object)
 {
     XkcdApi *self = (XkcdApi *)object;
 
+    g_object_unref (self->sesh); 
+
     G_OBJECT_CLASS (xkcd_api_parent_class)->finalize (object);
 }
 
@@ -89,26 +91,67 @@ xkcd_api_class_init (XkcdApiClass *klass)
 }
 
 static void
-xkcd_api_handle_error (XkcdsImage *image, int status)
+xkcd_api_handle_error (int status)
 {
     g_warning ("status code: %d, Unable to fetch image", status);
 }
+void
+xkcd_api_image_callback (SoupSession *session,
+                         SoupMessage *message,
+                         gpointer user_data)
+{
+    
+}
 
 void
-xkcd_api_get_random (XkcdApi *self, XkcdsImage *image)
+xkcd_api_json_callback (SoupSession *session,
+                        SoupMessage *msg,
+                        gpointer user_data)
+{
+    Xkcd *xkcd;
+    SoupMessage *img_msg;
+    XkcdsImage *xkcds_image;
+
+    xkcds_image = XKCDS_IMAGE (user_data);
+
+    if (msg->status_code != 200) {
+        xkcd_api_handle_error (msg->status_code);
+        return;
+    }
+
+    JsonParser *parser = json_parser_new ();
+    json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
+    JsonNode *root = json_parser_get_root(parser);
+
+    xkcd = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
+
+    gchar *alt, *img;
+    g_object_get (xkcd, "alt", &alt, NULL);
+    g_object_get (xkcd, "img", &img, NULL); 
+    g_debug ("\n%s\n", alt);
+    g_debug ("\n%s\n", img);
+
+    img_msg = soup_message_new ("GET", img);
+    soup_session_queue_message (session, msg, xkcd_api_image_callback, xkcds_image); 
+    g_free (alt);
+    g_free (img);
+
+}
+
+void
+xkcd_api_get_random (XkcdApi *self, XkcdsImage *image, GCancellable *cancel)
 {
     int random;
     gchar* url;
     SoupMessage *msg;
-    int status;
-    Xkcd *xkcd;
     random = g_random_int () % 1800; 
 
     url = g_strdup_printf (XKCD_URL, random);
     msg = soup_message_new ("GET", url);
 
-    status = soup_session_send_message (self->sesh, msg);
-    if (status != 200) {
+
+    soup_session_queue_message (self->sesh, msg, xkcd_api_json_callback, image);
+/*    if (status != 200) {
         xkcd_api_handle_error (image, status);
         return;
     }
@@ -118,7 +161,7 @@ xkcd_api_get_random (XkcdApi *self, XkcdsImage *image)
 
     JsonNode *root = json_parser_get_root(parser);
     xkcd = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
-/*
+
     gchar *alt, *img;
     g_object_get (xkcd, "alt", &alt, NULL);
     g_object_get (xkcd, "img", &img, NULL); 
@@ -132,5 +175,6 @@ xkcd_api_get_random (XkcdApi *self, XkcdsImage *image)
 static void
 xkcd_api_init (XkcdApi *self)
 {
+    g_debug ("Starting");
     self->sesh = soup_session_new ();
 }

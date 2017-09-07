@@ -109,5 +109,6 @@ xkcds_window_init (XkcdsWindow *self)
     XkcdsWindowPrivate *priv = xkcds_window_get_instance_private (self);
     gtk_widget_init_template (GTK_WIDGET (self));
 
+    xkcds_image_randomize (priv->xkcds_image);
     gtk_widget_show_all (GTK_WIDGET (self));
 }

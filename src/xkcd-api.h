@@ -35,7 +35,7 @@ G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
 XkcdApi *xkcd_api_new (void);
 
 void
-xkcd_api_get_random (XkcdApi *self, XkcdsImage *image);
+xkcd_api_get_random (XkcdApi *self, XkcdsImage *image, GCancellable *cancel);
 
 G_END_DECLS
 
