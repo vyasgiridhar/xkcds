@@ -20,19 +20,30 @@
 #define XKCD_H
 
 #include <glib-object.h>
+#include "xkcds-image.h"
 
 G_BEGIN_DECLS
 
 #define XKCD_TYPE_OBJECT (xkcd_object_get_type())
 
-struct _Xkcd
+G_DECLARE_DERIVABLE_TYPE (Xkcd, xkcd_object, XKCD, OBJECT, GObject)
+
+struct _XkcdClass
 {
-    GObject parent;
+    GObjectClass parent;
+
+    void (* loaded) (Xkcd, XkcdsImage);
 };
 
-G_DECLARE_FINAL_TYPE (Xkcd, xkcd_object, XKCD, OBJECT, GObject)
-
 Xkcd *xkcd_new (void);
+
+void
+xkcd_object_load_async (Xkcd               *self,
+                        int                *movement,
+                        GCancellable       *cancellable,
+                        GAsyncReadyCallback callback,
+                        gpointer            data);
+
 
 G_END_DECLS
 

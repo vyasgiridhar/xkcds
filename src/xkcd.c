@@ -20,20 +20,27 @@
 
 typedef struct
 {
-    gchar *month;
-    int num;
-    gchar *link;
-    gchar *year;
-    gchar *news;
-    gchar *safe_title;
-    gchar *transcript;
-    gchar *alt;
-    gchar *img;
-    gchar *title;
-    gchar *day;
+    gchar   *month;
+    int      num;
+    gchar   *link;
+    gchar   *year;
+    gchar   *news;
+    gchar   *safe_title;
+    gchar   *transcript;
+    gchar   *alt;
+    gchar   *img;
+    gchar   *title;
+    gchar   *day;
+
+    gboolean disp;
 } XkcdPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
+
+enum {
+	LOADED,
+	N_SIGNALS
+};
 
 enum {
     PROP_MONTH = 1,
@@ -49,6 +56,8 @@ enum {
     PROP_DAY,
     N_PROPS
 };
+
+static guint signals [N_SIGNALS] = {0, };
 
 static GParamSpec *properties [N_PROPS]  = {NULL,};
 
@@ -254,9 +263,61 @@ xkcd_object_class_init (XkcdClass *klass)
                              NULL,
                              G_PARAM_READWRITE);
 
+	signals [LOADED] =
+		g_signal_new ("loaded",
+                      XKCD_TYPE_OBJECT,
+                      G_SIGNAL_RUN_LAST,
+                      G_STRUCT_OFFSET (XkcdClass, loaded),
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      0);
+
     g_object_class_install_properties (object_class,
                                        N_PROPS,
                                        properties);
+}
+
+static void
+xkcd_loader_thread (GTask *task,
+                    gpointer source_object,
+                    gpointer task_data,
+                    GCancellable *cancellable)
+{
+    Xkcd *self = source_object;
+    int *movement = task_data;
+    GError *error;
+    Xkcd *new = xkcd_object_new ();
+
+    /*
+     * Network stuff here
+     */
+
+    if (self)
+    {
+        g_task_return_pointer (task, new, g_object_unref);
+    }
+    else
+        g_task_return_error (task, error);
+}
+
+void
+xkcd_object_load_async (Xkcd               *self,
+                        int                *movement,
+                        GCancellable       *cancellable,
+                        GAsyncReadyCallback callback,
+                        gpointer            data)
+{
+    GTask *task;
+
+    task = g_task_new (self, cancellable, callback, data);
+
+    g_task_set_task_data (task, movement, NULL);
+
+    g_task_run_in_thread (task, xkcd_loader_thread);
+
+    g_object_unref (task);
 }
 
 static void
