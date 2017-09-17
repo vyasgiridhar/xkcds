@@ -21,8 +21,12 @@
 
 #include <glib-object.h>
 #include "xkcds-image.h"
+#include <libsoup/soup.h>
+#include <json-glib-1.0/json-glib/json-glib.h>
 
 G_BEGIN_DECLS
+
+#define XKCD_URL "http://xkcd.com/%d/info.0.json"
 
 #define XKCD_TYPE_OBJECT (xkcd_object_get_type())
 

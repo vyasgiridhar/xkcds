@@ -20,26 +20,41 @@
 
 typedef struct
 {
-    gchar   *month;
-    int      num;
-    gchar   *link;
-    gchar   *year;
-    gchar   *news;
-    gchar   *safe_title;
-    gchar   *transcript;
-    gchar   *alt;
-    gchar   *img;
-    gchar   *title;
-    gchar   *day;
+    gchar       *month;
+    int          num;
+    gchar       *link;
+    gchar       *year;
+    gchar       *news;
+    gchar       *safe_title;
+    gchar       *transcript;
+    gchar       *alt;
+    gchar       *img;
+    gchar       *title;
+    gchar       *day;
 
-    gboolean disp;
+    GQuark       quark;
+    SoupSession *sesh;
+    GdkPixbuf   *cache;
 } XkcdPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
 
+#define XKCD_API_ERROR 1
+
 enum {
 	LOADED,
 	N_SIGNALS
+};
+
+enum {
+    PREV,
+    NEXT,
+    RAND
+};
+
+enum {
+    XKCD_NETWORK_ERROR,
+    XKCD_PIXBUF_ERROR
 };
 
 enum {
@@ -287,13 +302,59 @@ xkcd_loader_thread (GTask *task,
 {
     Xkcd *self = source_object;
     int *movement = task_data;
-    GError *error;
+
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
     Xkcd *new = xkcd_object_new ();
 
-    /*
-     * Network stuff here
-     */
+    char *url;
+    GError *error;
+    SoupMessage *msg;
+    int status;
 
+    error = g_slice_new0 (GError);
+
+    if (priv->num == 0)
+    {
+        priv->num = g_random_int () % 1000;
+    }
+    else
+    {
+        switch (*movement)
+        {
+            case PREV:
+                priv->num--;
+                break;
+            case NEXT:
+                priv->num++;
+                break;
+            case RAND:
+                priv->num = g_random_int () % 1000;
+                break;
+            default:
+                break;
+        }
+    }
+
+    url = g_strdup_printf (XKCD_URL, priv->num);
+
+    msg = soup_message_new (SOUP_METHOD_GET, url);
+
+    status = soup_session_send_message (priv->sesh, msg);
+
+    if (!SOUP_STATUS_IS_SUCCESSFUL (status))
+    {
+        error->domain = XKCD_API_ERROR;
+        error->code = XKCD_NETWORK_ERROR;
+        error->message = g_strdup (msg->response_body->data);
+
+        g_task_return_error (task, error);
+    }
+
+    JsonParser *parser = json_parser_new ();
+    json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
+    JsonNode *root = json_parser_get_root(parser);
+
+    self = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
     if (self)
     {
         g_task_return_pointer (task, new, g_object_unref);
@@ -323,4 +384,8 @@ xkcd_object_load_async (Xkcd               *self,
 static void
 xkcd_object_init (Xkcd *self)
 {
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    priv->num = 0;
+    priv->sesh = soup_session_new ();
 }
