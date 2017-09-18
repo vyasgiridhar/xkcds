@@ -17,7 +17,6 @@
  */
 
 #include "xkcds-window.h"
-#include "xkcd-api.h"
 #include "xkcds-image.h"
 
 struct _XkcdsWindow

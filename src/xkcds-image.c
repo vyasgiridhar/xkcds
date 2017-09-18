@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "xkcd.h"
 #include "xkcds-image.h"
 #include "gtkimageview.h"
-#include "xkcd-api.h"
 
 #define OVERLAY_REVEAL_ANIM_TIME (500U)
 
@@ -102,7 +102,7 @@ clear_overlay_timeout (XkcdsImage *self)
     self->overlay_timeout_source = NULL;
 }
 
-static gboolean 
+static gboolean
 overlay_timeout_callback (gpointer data)
 {
     XkcdsImage *self = XKCDS_IMAGE (data);
@@ -134,7 +134,7 @@ motion_notify_event (GtkWidget *widget, GdkEventMotion *event, gpointer user_dat
 {
     XkcdsImage *self = XKCDS_IMAGE (user_data);
     gboolean reveal_child;
-    
+
     reveal_child = gtk_revealer_get_reveal_child (GTK_REVEALER (self->right));
 
     if (!reveal_child)
@@ -159,10 +159,24 @@ enter_overlay_cb (GtkWidget *widget, GdkEvent *event, gpointer user_data)
 }
 
 void
+xkcd_image_setter_callback (GObject      *source_object,
+                            GAsyncResult *result,
+                            gpointer      data)
+{
+
+}
+
+void
 xkcds_image_randomize (XkcdsImage *self)
 {
-    XkcdApi *api_ref= xkcd_api_new();
-    xkcd_api_get_random (api_ref, self, NULL);
+    Xkcd *xkcd = xkcd_object_new ();
+
+    xkcd_object_load_async (xkcd,
+                            0,
+                            self->cancel_action,
+                            xkcd_image_setter_callback,
+                            self);
+
 }
 
 static void
@@ -188,6 +202,8 @@ static void
 xkcds_image_init (XkcdsImage *self)
 {
     gtk_widget_init_template (GTK_WIDGET (self));
+
+    self->cancel_action = g_cancellable_new ();
 
     /* left revealer */
     self->left = gtk_revealer_new ();

@@ -39,7 +39,7 @@ struct _XkcdClass
     void (* loaded) (Xkcd, XkcdsImage);
 };
 
-Xkcd *xkcd_new (void);
+Xkcd *xkcd_object_new (void);
 
 void
 xkcd_object_load_async (Xkcd               *self,
@@ -48,6 +48,10 @@ xkcd_object_load_async (Xkcd               *self,
                         GAsyncReadyCallback callback,
                         gpointer            data);
 
+Xkcd*
+xkcd_object_load_finish (Xkcd         *self,
+                         GAsyncResult *result,
+                         GError      **error);
 
 G_END_DECLS
 
