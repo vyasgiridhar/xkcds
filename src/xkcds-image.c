@@ -35,6 +35,8 @@ struct _XkcdsImage
 
     GSource      *overlay_timeout_source;
     GCancellable *cancel_action;
+
+    guint        *current_movement;
 };
 
 G_DEFINE_TYPE (XkcdsImage, xkcds_image, GTK_TYPE_STACK)
@@ -57,6 +59,9 @@ xkcds_image_finalize (GObject *object)
 {
     XkcdsImage *self = (XkcdsImage *)object;
 
+    g_object_unref (G_OBJECT (self->cancel_action));
+
+    self->cancel_action = NULL;
     G_OBJECT_CLASS (xkcds_image_parent_class)->finalize (object);
 }
 
@@ -163,7 +168,17 @@ xkcd_image_setter_callback (GObject      *source_object,
                             GAsyncResult *result,
                             gpointer      data)
 {
+    Xkcd *xkcd = XKCD_OBJECT (source_object);
+    XkcdsImage *image = data;
+    GError *error;
 
+    xkcd = xkcd_object_load_finish (xkcd, result, &error);
+
+    gtk_image_view_set_pixbuf (image->imageview,
+                               xkcd_object_get_pixbuf_cache (xkcd),
+                               1);
+
+    gtk_stack_set_visible_child_name (GTK_STACK (image), "imageview");
 }
 
 void
@@ -171,8 +186,10 @@ xkcds_image_randomize (XkcdsImage *self)
 {
     Xkcd *xkcd = xkcd_object_new ();
 
+    int *movement = 0;
+
     xkcd_object_load_async (xkcd,
-                            0,
+                            movement,
                             self->cancel_action,
                             xkcd_image_setter_callback,
                             self);
@@ -272,5 +289,5 @@ xkcds_image_init (XkcdsImage *self)
     g_signal_connect (self->overlay, "enter-notify-event",
                       G_CALLBACK (enter_overlay_cb),
                       self);
-    gtk_stack_set_visible_child_name (GTK_STACK (self), "imageview");
+    gtk_stack_set_visible_child_name (GTK_STACK (self), "spinner");
 }

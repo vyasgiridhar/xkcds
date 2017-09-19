@@ -20,6 +20,11 @@
 
 #include "xkcd.h"
 
+struct _Xkcd
+{
+    GObject parent;
+};
+
 typedef struct
 {
     gchar       *month;
@@ -42,11 +47,6 @@ typedef struct
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
 
 #define XKCD_API_ERROR 1
-
-    enum {
-        LOADED,
-        N_SIGNALS
-    };
 
 enum {
     PREV,
@@ -73,8 +73,6 @@ enum {
     PROP_DAY,
     N_PROPS
 };
-
-static guint signals [N_SIGNALS] = {0, };
 
 static GParamSpec *properties [N_PROPS]  = {NULL,};
 
@@ -155,9 +153,9 @@ xkcd_object_get_property (GObject    *object,
 
     static void
 xkcd_object_set_property (GObject      *object,
-        guint         prop_id,
-        const GValue *value,
-        GParamSpec   *pspec)
+                          guint         prop_id,
+                          const GValue *value,
+                          GParamSpec   *pspec)
 {
     Xkcd *self = XKCD_OBJECT (object);
     XkcdPrivate *priv = xkcd_object_get_instance_private (self);
@@ -213,87 +211,84 @@ xkcd_object_class_init (XkcdClass *klass)
 
     properties [PROP_MONTH] =
         g_param_spec_string ("month",
-                "Month",
-                "Month of the XKCD post",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Month",
+                             "Month of the XKCD post",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_NUM] =
         g_param_spec_int  ("num",
-                "Num",
-                "Number of the XKCD",
-                0,
-                10000000,
-                0,
-                G_PARAM_READWRITE);
+                           "Num",
+                           "Number of the XKCD",
+                           0,
+                           10000000,
+                           0,
+                           G_PARAM_READWRITE);
     properties [PROP_LINK] =
         g_param_spec_string ("link",
-                "Link",
-                "Link to the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Link",
+                             "Link to the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_YEAR] =
         g_param_spec_string ("year",
-                "Year",
-                "Year of the posting",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Year",
+                             "Year of the posting",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_NEWS] =
         g_param_spec_string ("news",
-                "News",
-                "News about the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "News",
+                             "News about the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_SAFE_TITLE] =
         g_param_spec_string ("safe_title",
-                "SafeTitle",
-                "Safe Title for the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "SafeTitle",
+                             "Safe Title for the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_TRANSCRIPT] =
         g_param_spec_string ("transcript",
-                "Transcript",
-                "Transcript for the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Transcript",
+                             "Transcript for the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_ALT] =
         g_param_spec_string ("alt",
-                "Alt",
-                "Alt text for the image",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Alt",
+                             "Alt text for the image",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_IMG] =
         g_param_spec_string ("img",
-                "Img",
-                "Img link to the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Img",
+                             "Img link to the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_TITLE] =
         g_param_spec_string ("title",
-                "Title",
-                "Title for the XKCD",
-                NULL,
-                G_PARAM_READWRITE);
+                             "Title",
+                             "Title for the XKCD",
+                             NULL,
+                             G_PARAM_READWRITE);
     properties [PROP_DAY] =
         g_param_spec_string ("day",
-                "Day",
-                "Day of the XKCD posting",
-                NULL,
-                G_PARAM_READWRITE);
-
-    signals [LOADED] =
-        g_signal_new ("loaded",
-                XKCD_TYPE_OBJECT,
-                G_SIGNAL_RUN_LAST,
-                G_STRUCT_OFFSET (XkcdClass, loaded),
-                NULL,
-                NULL,
-                NULL,
-                G_TYPE_NONE,
-                0);
+                             "Day",
+                             "Day of the XKCD posting",
+                             NULL,
+                             G_PARAM_READWRITE);
 
     g_object_class_install_properties (object_class,
-            N_PROPS,
-            properties);
+                                       N_PROPS,
+                                       properties);
+}
+
+GdkPixbuf*
+xkcd_object_get_pixbuf_cache(Xkcd *self)
+{
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    return priv->cache;
 }
 
 static void
@@ -312,7 +307,7 @@ xkcd_loader_thread (GTask *task,
     int status;
     gchar *cache_dir;
     gchar *cached_xkcd;
-
+    gchar *cmovement;
 
     XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
@@ -343,7 +338,7 @@ xkcd_loader_thread (GTask *task,
     cached_xkcd = g_build_filename (g_get_user_cache_dir (),
                                     "xkcds",
                                     "images",
-                                    priv->num,
+                                    "1",
                                     NULL);
 
     url = g_strdup_printf (XKCD_URL, priv->num);
@@ -374,14 +369,26 @@ xkcd_loader_thread (GTask *task,
         if (error)
         {
             g_warning ("Unable to load from cache");
+            g_free (cached_xkcd);
             goto soup;
         }
     }
     else
     {
     soup:
+        g_error_free (error);
+        error = NULL;
+
         msg = soup_message_new (SOUP_METHOD_GET, priv->img);
         status = soup_session_send_message (priv->sesh, msg);
+
+        if (!SOUP_STATUS_IS_SUCCESSFUL (status))
+        {
+            error->domain = XKCD_API_ERROR;
+            error->code = XKCD_NETWORK_ERROR;
+            error->message = g_strdup (msg->response_body->data);
+            goto out;
+        }
 
         loader = gdk_pixbuf_loader_new ();
 
@@ -419,7 +426,9 @@ xkcd_loader_thread (GTask *task,
                 }
             }
 
-            cached_xkcd = g_build_filename (cache_dir, priv->num, NULL);
+            cmovement = g_strdup_printf ("%d", priv->num);
+
+            cached_xkcd = g_build_filename (cache_dir, cmovement, NULL);
 
             g_file_set_contents (cached_xkcd,
                                  msg->response_body->data,
@@ -434,10 +443,13 @@ xkcd_loader_thread (GTask *task,
 
         g_object_unref (loader);
     }
-    g_task_return_pointer (task, parsed, g_object_unref);
 
+    g_free (cmovement);
+    g_task_return_pointer (task, parsed, g_object_unref);
+    return;
     out:
     g_task_return_error (task, error);
+    return;
 }
 
 void

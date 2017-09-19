@@ -30,14 +30,7 @@ G_BEGIN_DECLS
 
 #define XKCD_TYPE_OBJECT (xkcd_object_get_type())
 
-G_DECLARE_DERIVABLE_TYPE (Xkcd, xkcd_object, XKCD, OBJECT, GObject)
-
-struct _XkcdClass
-{
-    GObjectClass parent;
-
-    void (* loaded) (Xkcd, XkcdsImage);
-};
+G_DECLARE_FINAL_TYPE (Xkcd, xkcd_object, XKCD, OBJECT, GObject)
 
 Xkcd *xkcd_object_new (void);
 
@@ -52,6 +45,9 @@ Xkcd*
 xkcd_object_load_finish (Xkcd         *self,
                          GAsyncResult *result,
                          GError      **error);
+
+GdkPixbuf*
+xkcd_object_get_pixbuf_cache(Xkcd *self);
 
 G_END_DECLS
 
