@@ -37,6 +37,8 @@ struct _XkcdsImage
     GCancellable *cancel_action;
 
     guint        *current_movement;
+
+    Xkcd         *xkcd;
 };
 
 G_DEFINE_TYPE (XkcdsImage, xkcds_image, GTK_TYPE_STACK)
@@ -60,6 +62,7 @@ xkcds_image_finalize (GObject *object)
     XkcdsImage *self = (XkcdsImage *)object;
 
     g_object_unref (G_OBJECT (self->cancel_action));
+    g_object_unref (self->xkcd);
 
     self->cancel_action = NULL;
     G_OBJECT_CLASS (xkcds_image_parent_class)->finalize (object);
@@ -170,15 +173,21 @@ xkcd_image_setter_callback (GObject      *source_object,
 {
     Xkcd *xkcd = XKCD_OBJECT (source_object);
     XkcdsImage *image = data;
+    GdkPixbuf *cache;
     GError *error;
 
     xkcd = xkcd_object_load_finish (xkcd, result, &error);
+    cache = xkcd_object_get_pixbuf_cache (xkcd);
 
     gtk_image_view_set_pixbuf (image->imageview,
-                               xkcd_object_get_pixbuf_cache (xkcd),
+                               cache,
                                1);
 
     gtk_stack_set_visible_child_name (GTK_STACK (image), "imageview");
+
+//    g_slice_free (GError, error);
+    g_object_unref (G_OBJECT (cache));
+    g_object_unref (G_OBJECT (xkcd));
 }
 
 void

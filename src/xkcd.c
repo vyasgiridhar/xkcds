@@ -42,6 +42,7 @@ typedef struct
     GQuark       quark;
     SoupSession *sesh;
     GdkPixbuf   *cache;
+    JsonParser  *parser;
 } XkcdPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
@@ -98,6 +99,11 @@ xkcd_object_finalize (GObject *object)
     g_free (priv->img);
     g_free (priv->title);
     g_free (priv->day);
+
+    g_object_unref (priv->sesh);
+    g_object_unref (priv->parser);
+
+    priv->sesh = NULL;
 
     G_OBJECT_CLASS (xkcd_object_parent_class)->finalize (object);
 }
@@ -355,12 +361,10 @@ xkcd_loader_thread (GTask *task,
         goto out;
     }
 
-    JsonParser *parser = json_parser_new ();
-    json_parser_load_from_data (parser, msg->response_body->data, -1, NULL);
-    JsonNode *root = json_parser_get_root(parser);
-
+    priv->parser = json_parser_new ();
+    json_parser_load_from_data (priv->parser, msg->response_body->data, -1, NULL);
+    JsonNode *root = json_parser_get_root(priv->parser);
     parsed = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
-
     priv = xkcd_object_get_instance_private (parsed);
 
     if (g_file_test (cached_xkcd, G_FILE_TEST_EXISTS))
@@ -444,6 +448,7 @@ xkcd_loader_thread (GTask *task,
         g_object_unref (loader);
     }
 
+    g_free (error);
     g_free (cmovement);
     g_task_return_pointer (task, parsed, g_object_unref);
     return;
