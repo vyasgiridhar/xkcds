@@ -16,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
-
 #include "xkcd.h"
 
 struct _Xkcd
@@ -39,26 +37,12 @@ typedef struct
     gchar       *title;
     gchar       *day;
 
-    GQuark       quark;
-    SoupSession *sesh;
-    GdkPixbuf   *cache;
-    JsonParser  *parser;
+	GdkPixbuf   *cache;
 } XkcdPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (Xkcd, xkcd_object, G_TYPE_OBJECT)
 
 #define XKCD_API_ERROR 1
-
-enum {
-    PREV,
-    NEXT,
-    RAND
-};
-
-enum {
-    XKCD_NETWORK_ERROR,
-    XKCD_PIXBUF_ERROR
-};
 
 enum {
     PROP_MONTH = 1,
@@ -100,19 +84,16 @@ xkcd_object_finalize (GObject *object)
     g_free (priv->title);
     g_free (priv->day);
 
-    g_object_unref (priv->sesh);
-    g_object_unref (priv->parser);
-
-    priv->sesh = NULL;
+	g_object_unref (priv->cache);
 
     G_OBJECT_CLASS (xkcd_object_parent_class)->finalize (object);
 }
 
 static void
 xkcd_object_get_property (GObject    *object,
-        guint       prop_id,
-        GValue     *value,
-        GParamSpec *pspec)
+                          guint       prop_id,
+                          GValue     *value,
+                          GParamSpec *pspec)
 {
     Xkcd *self = XKCD_OBJECT (object);
     XkcdPrivate *priv = xkcd_object_get_instance_private (self);
@@ -157,7 +138,7 @@ xkcd_object_get_property (GObject    *object,
     }
 }
 
-    static void
+static void
 xkcd_object_set_property (GObject      *object,
                           guint         prop_id,
                           const GValue *value,
@@ -298,198 +279,9 @@ xkcd_object_get_pixbuf_cache(Xkcd *self)
 }
 
 static void
-xkcd_loader_thread (GTask *task,
-        gpointer source_object,
-        gpointer task_data,
-        GCancellable *cancellable)
-{
-    Xkcd *parsed;
-    Xkcd *self = source_object;
-    int *movement = task_data;
-    GdkPixbufLoader *loader;
-    char *url;
-    GError *error;
-    SoupMessage *msg;
-    int status;
-    gchar *cache_dir;
-    gchar *cached_xkcd;
-    gchar *cmovement;
-
-    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
-
-    error = g_slice_new0 (GError);
-
-    if (priv->num == 0)
-    {
-        priv->num = g_random_int () % 1000;
-    }
-    else
-    {
-        switch (*movement)
-        {
-            case PREV:
-                priv->num--;
-                break;
-            case NEXT:
-                priv->num++;
-                break;
-            case RAND:
-                priv->num = g_random_int () % 1000;
-                break;
-            default:
-                break;
-        }
-    }
-
-    cached_xkcd = g_build_filename (g_get_user_cache_dir (),
-                                    "xkcds",
-                                    "images",
-                                    "1",
-                                    NULL);
-
-    url = g_strdup_printf (XKCD_URL, priv->num);
-
-    msg = soup_message_new (SOUP_METHOD_GET, url);
-
-    status = soup_session_send_message (priv->sesh, msg);
-
-    if (!SOUP_STATUS_IS_SUCCESSFUL (status))
-    {
-        error->domain = XKCD_API_ERROR;
-        error->code = XKCD_NETWORK_ERROR;
-        error->message = g_strdup (msg->response_body->data);
-        goto out;
-    }
-
-    priv->parser = json_parser_new ();
-    json_parser_load_from_data (priv->parser, msg->response_body->data, -1, NULL);
-    JsonNode *root = json_parser_get_root(priv->parser);
-    parsed = XKCD_OBJECT (json_gobject_deserialize (XKCD_TYPE_OBJECT, root));
-    priv = xkcd_object_get_instance_private (parsed);
-
-    if (g_file_test (cached_xkcd, G_FILE_TEST_EXISTS))
-    {
-        gdk_pixbuf_new_from_file(cached_xkcd, &error);
-        if (error)
-        {
-            g_warning ("Unable to load from cache");
-            g_free (cached_xkcd);
-            goto soup;
-        }
-    }
-    else
-    {
-    soup:
-        g_error_free (error);
-        error = NULL;
-
-        msg = soup_message_new (SOUP_METHOD_GET, priv->img);
-        status = soup_session_send_message (priv->sesh, msg);
-
-        if (!SOUP_STATUS_IS_SUCCESSFUL (status))
-        {
-            error->domain = XKCD_API_ERROR;
-            error->code = XKCD_NETWORK_ERROR;
-            error->message = g_strdup (msg->response_body->data);
-            goto out;
-        }
-
-        loader = gdk_pixbuf_loader_new ();
-
-        if (!gdk_pixbuf_loader_write (loader,
-                                      (const guchar *) msg->response_body->data,
-                                      msg->response_body->length,
-                                      &error))
-        {
-            g_warning ("Unable to load pixbuf : %s", error->message);
-            g_object_unref (loader);
-            goto out;
-        }
-
-        gdk_pixbuf_loader_close (loader, &error);
-        if (error)
-        {
-            g_warning ("Unable to close the pixbuf loader: %s", error->message);
-            g_object_unref (loader);
-            goto out;
-        }
-        else
-        {
-            cache_dir = g_build_filename (g_get_user_cache_dir (),
-                    "xkcds",
-                    "images",
-                    NULL);
-
-            if (g_mkdir_with_parents (cache_dir, 0700) == -1)
-            {
-                if (errno != EEXIST)
-                {
-                    error->message = "Unable to create the profile image cache";
-                    g_object_unref (loader);
-                    goto out;
-                }
-            }
-
-            cmovement = g_strdup_printf ("%d", priv->num);
-
-            cached_xkcd = g_build_filename (cache_dir, cmovement, NULL);
-
-            g_file_set_contents (cached_xkcd,
-                                 msg->response_body->data,
-                                 msg->response_body->length,
-                                 NULL);
-            g_free (cache_dir);
-        }
-
-        priv->cache = gdk_pixbuf_loader_get_pixbuf (loader);
-        if (priv->cache)
-            g_object_ref (priv->cache);
-
-        g_object_unref (loader);
-    }
-
-    g_free (error);
-    g_free (cmovement);
-    g_task_return_pointer (task, parsed, g_object_unref);
-    return;
-    out:
-    g_task_return_error (task, error);
-    return;
-}
-
-void
-xkcd_object_load_async (Xkcd               *self,
-                        int                *movement,
-                        GCancellable       *cancellable,
-                        GAsyncReadyCallback callback,
-                        gpointer            data)
-{
-    GTask *task;
-
-    task = g_task_new (self, cancellable, callback, data);
-
-    g_task_set_task_data (task, movement, NULL);
-
-    g_task_run_in_thread (task, xkcd_loader_thread);
-
-    g_object_unref (task);
-}
-
-Xkcd*
-xkcd_object_load_finish (Xkcd         *self,
-                         GAsyncResult *result,
-                         GError      **error)
-{
-    g_return_val_if_fail (g_task_is_valid (result, self), NULL);
-
-    return g_task_propagate_pointer (G_TASK (result), error);
-}
-
-static void
 xkcd_object_init (Xkcd *self)
 {
     XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
     priv->num = 0;
-    priv->sesh = soup_session_new ();
 }

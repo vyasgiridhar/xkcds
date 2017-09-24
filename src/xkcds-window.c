@@ -52,6 +52,8 @@ xkcds_window_finalize (GObject *object)
     XkcdsWindow *self = (XkcdsWindow *)object;
     XkcdsWindowPrivate *priv = xkcds_window_get_instance_private (self);
 
+    g_object_unref (priv->xkcds_image);
+
     G_OBJECT_CLASS (xkcds_window_parent_class)->finalize (object);
 }
 

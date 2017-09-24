@@ -1,4 +1,4 @@
-/* xkcd.h
+/* xkcd-api.h
  *
  * Copyright (C) 2017 Vyas Giridharan <vyasgiridhar27@gmail.com>
  *
@@ -16,38 +16,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XKCD_H
-#define XKCD_H
+#ifndef XKCD_API_H
+#define XKCD_API_H
 
 #include <glib-object.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <libsoup/soup.h>
+#include <json-glib-1.0/json-glib/json-glib.h>
+#include "xkcd.h"
 
 G_BEGIN_DECLS
 
-#define XKCD_URL "http://xkcd.com/%d/info.0.json"
+#define XKCD_TYPE_API (xkcd_api_get_type())
 
-#define XKCD_TYPE_OBJECT (xkcd_object_get_type())
+G_DECLARE_FINAL_TYPE (XkcdApi, xkcd_api, XKCD, API, GObject)
 
-G_DECLARE_FINAL_TYPE (Xkcd, xkcd_object, XKCD, OBJECT, GObject)
-
-Xkcd *xkcd_object_new (void);
-
-GdkPixbuf*
-xkcd_object_get_pixbuf_cache(Xkcd *self);
-
-int
-xkcd_object_get_number (Xkcd *self);
+XkcdApi *xkcd_api_new (void);
 
 void
-xkcd_object_set_number (Xkcd *self, int number);
+xkcd_api_load_async (XkcdApi            *self,
+                     int                *movement,
+                     GCancellable       *cancellable,
+                     GAsyncReadyCallback callback,
+                     gpointer            data);
 
-gchar*
-xkcd_object_get_img_link (Xkcd *self);
-
-void
-xkcd_object_set_pixbuf (Xkcd *self, GdkPixbuf *cache);
+Xkcd*
+xkcd_api_load_finish (XkcdApi      *self,
+                      GAsyncResult *result,
+                      GError      **error);
 
 G_END_DECLS
 
-#endif /* XKCD_H */
+#endif /* XKCD_API_H */
 

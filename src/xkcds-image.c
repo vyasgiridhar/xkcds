@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xkcd.h"
+#include "xkcd-api.h"
 #include "xkcds-image.h"
 #include "gtkimageview.h"
 
@@ -38,7 +38,7 @@ struct _XkcdsImage
 
     guint        *current_movement;
 
-    Xkcd         *xkcd;
+    XkcdApi      *api;
 };
 
 G_DEFINE_TYPE (XkcdsImage, xkcds_image, GTK_TYPE_STACK)
@@ -62,7 +62,7 @@ xkcds_image_finalize (GObject *object)
     XkcdsImage *self = (XkcdsImage *)object;
 
     g_object_unref (G_OBJECT (self->cancel_action));
-    g_object_unref (self->xkcd);
+    g_object_unref (self->api);
 
     self->cancel_action = NULL;
     G_OBJECT_CLASS (xkcds_image_parent_class)->finalize (object);
@@ -171,37 +171,32 @@ xkcd_image_setter_callback (GObject      *source_object,
                             GAsyncResult *result,
                             gpointer      data)
 {
-    Xkcd *xkcd = XKCD_OBJECT (source_object);
+    Xkcd *xkcd;
+    XkcdApi *api = XKCD_API (source_object);
     XkcdsImage *image = data;
     GdkPixbuf *cache;
     GError *error;
 
-    xkcd = xkcd_object_load_finish (xkcd, result, &error);
+    xkcd = xkcd_api_load_finish (api, result, &error);
     cache = xkcd_object_get_pixbuf_cache (xkcd);
 
     gtk_image_view_set_pixbuf (image->imageview,
                                cache,
                                1);
-
     gtk_stack_set_visible_child_name (GTK_STACK (image), "imageview");
-
-//    g_slice_free (GError, error);
-    g_object_unref (G_OBJECT (cache));
-    g_object_unref (G_OBJECT (xkcd));
 }
 
 void
 xkcds_image_randomize (XkcdsImage *self)
 {
-    Xkcd *xkcd = xkcd_object_new ();
 
     int *movement = 0;
 
-    xkcd_object_load_async (xkcd,
-                            movement,
-                            self->cancel_action,
-                            xkcd_image_setter_callback,
-                            self);
+    xkcd_api_load_async (self->api,
+                         movement,
+                         self->cancel_action,
+                         xkcd_image_setter_callback,
+                         self);
 
 }
 
@@ -230,6 +225,7 @@ xkcds_image_init (XkcdsImage *self)
     gtk_widget_init_template (GTK_WIDGET (self));
 
     self->cancel_action = g_cancellable_new ();
+    self->api = xkcd_api_new ();
 
     /* left revealer */
     self->left = gtk_revealer_new ();

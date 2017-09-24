@@ -74,6 +74,8 @@ xkcds_application_finalize (GObject *object)
     XkcdsApplication *self = (XkcdsApplication *)object;
     XkcdsApplicationPrivate *priv = xkcds_application_get_instance_private (self);
 
+    g_object_unref (priv->window);
+
     G_OBJECT_CLASS (xkcds_application_parent_class)->finalize (object);
 }
 
