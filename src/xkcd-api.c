@@ -39,17 +39,10 @@ enum {
 };
 
 enum {
-	PROP_0,
-	N_PROPS
-};
-
-enum {
-    PREV,
+    PREV = 1,
     NEXT,
     RAND,
 };
-
-static GParamSpec *properties [N_PROPS];
 
 XkcdApi *
 xkcd_api_new (void)
@@ -60,39 +53,31 @@ xkcd_api_new (void)
 static void
 xkcd_api_finalize (GObject *object)
 {
-	XkcdApi *self = (XkcdApi *)object;
-
 	G_OBJECT_CLASS (xkcd_api_parent_class)->finalize (object);
 }
 
 static void
-xkcd_api_get_property (GObject    *object,
-                       guint       prop_id,
-                       GValue     *value,
-                       GParamSpec *pspec)
+xkcd_api_dispose (GObject *gobject)
 {
-	XkcdApi *self = XKCD_API (object);
+    XkcdApi *self = XKCD_API (gobject);
 
-	switch (prop_id)
-	  {
-	  default:
-	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-	  }
-}
+    if (self->parser)
+    {
+        g_clear_object (&self->parser);
+    }
 
-static void
-xkcd_api_set_property (GObject      *object,
-                       guint         prop_id,
-                       const GValue *value,
-                       GParamSpec   *pspec)
-{
-	XkcdApi *self = XKCD_API (object);
+    if (self->sesh)
+    {
+        soup_session_abort (self->sesh);
+        g_clear_object (&self->sesh);
+    }
 
-	switch (prop_id)
-	  {
-	  default:
-	    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-	  }
+    if (self->xkcd)
+    {
+        g_clear_object (&self->xkcd);
+    }
+
+    G_OBJECT_CLASS (xkcd_api_parent_class)->dispose (gobject);
 }
 
 static void
@@ -102,14 +87,14 @@ xkcd_api_loader_thread (GTask *task,
                         GCancellable *cancellable)
 {
     XkcdApi *self = source_object;
-    int *movement = task_data;
+    GdkPixbufLoader *loader = NULL;
     SoupMessage *msg;
-    GdkPixbufLoader *loader;
     GError *error = NULL;
-    gchar *url;
     gchar *cache_dir;
     gchar *cached_xkcd;
-    gchar *cmovement;
+    gchar *cmovement = NULL;
+    gchar *url;
+    int *movement = task_data;
     int num;
     int status;
 
@@ -124,10 +109,10 @@ xkcd_api_loader_thread (GTask *task,
         switch (*movement)
         {
             case PREV:
-                xkcd_object_set_number (self->xkcd, num--);
+                xkcd_object_set_number (self->xkcd, --num);
                 break;
             case NEXT:
-                xkcd_object_set_number (self->xkcd, num++);
+                xkcd_object_set_number (self->xkcd, ++num);
                 break;
             case RAND:
                 xkcd_object_set_number (self->xkcd, g_random_int () % 1000);
@@ -150,7 +135,7 @@ xkcd_api_loader_thread (GTask *task,
     msg = soup_message_new (SOUP_METHOD_GET, url);
 
     status = soup_session_send_message (self->sesh, msg);
-    g_critical ("%s", "Here");
+
     if (!SOUP_STATUS_IS_SUCCESSFUL (status))
     {
         error = g_error_new (XKCD_API_ERROR,
@@ -161,8 +146,8 @@ xkcd_api_loader_thread (GTask *task,
         goto out;
     }
 
-    g_critical ("%s", "Here");
     g_clear_error (&error);
+    g_clear_object (&self->xkcd);
 
     self->parser = json_parser_new ();
     json_parser_load_from_data (self->parser, msg->response_body->data, -1, NULL);
@@ -192,14 +177,13 @@ xkcd_api_loader_thread (GTask *task,
 
         if (!SOUP_STATUS_IS_SUCCESSFUL (status))
         {
-            error->domain = XKCD_API_ERROR;
-            error->code = XKCD_NETWORK_ERROR;
-            error->message = g_strdup (msg->response_body->data);
+            error = g_error_new (XKCD_API_ERROR,
+                                 XKCD_NETWORK_ERROR,
+                                 "%s",msg->reason_phrase);
             g_object_unref (msg);
             goto out;
         }
 
-        g_critical ("%s", "Here");
         loader = gdk_pixbuf_loader_new ();
 
         if (!gdk_pixbuf_loader_write (loader,
@@ -207,14 +191,11 @@ xkcd_api_loader_thread (GTask *task,
                                       msg->response_body->length,
                                       &error))
         {
-            g_clear_error (&error);
-            g_warning ("Unable to load pixbuf : %s", error->message);
-            gdk_pixbuf_loader_close (loader, &error);
-            g_object_unref (loader);
+            g_critical ("Unable to load pixbuf : %s", error->message);
             goto out;
         }
 
-        g_object_unref (msg);
+        g_object_unref (G_OBJECT (msg));
         g_clear_error (&error);
 
         gdk_pixbuf_loader_close (loader, &error);
@@ -243,22 +224,29 @@ xkcd_api_loader_thread (GTask *task,
 
             cmovement = g_strdup_printf ("%d", num);
 
-            cached_xkcd = g_build_filename (cache_dir, cmovement, NULL);
+            cached_xkcd = g_build_filename (cache_dir,
+                                            cmovement,
+                                            NULL);
 
             g_file_set_contents (cached_xkcd,
                                  msg->response_body->data,
                                  msg->response_body->length,
                                  NULL);
             g_free (cache_dir);
+            g_free (cached_xkcd);
         }
 
-        xkcd_object_set_pixbuf (self->xkcd, gdk_pixbuf_loader_get_pixbuf (loader));
+        GdkPixbuf *temp = gdk_pixbuf_loader_get_pixbuf (loader);
+        xkcd_object_set_pixbuf (self->xkcd, temp);
+        g_clear_object (&temp);
     }
 
     g_clear_error (&error);
+    g_free (url);
+    g_free (movement);
     g_free (cmovement);
     gdk_pixbuf_loader_close (loader, &error);
-    g_object_unref (loader);
+    g_clear_object (&loader);
 
     g_task_return_pointer (task, self->xkcd, g_object_unref);
     return;
@@ -301,11 +289,12 @@ xkcd_api_class_init (XkcdApiClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = xkcd_api_finalize;
-	object_class->get_property = xkcd_api_get_property;
-	object_class->set_property = xkcd_api_set_property;
+    object_class->dispose = xkcd_api_dispose;
 }
 
 static void
 xkcd_api_init (XkcdApi *self)
 {
+    self->xkcd = xkcd_object_new ();
+    self->sesh = soup_session_new ();
 }

@@ -84,7 +84,7 @@ xkcd_object_finalize (GObject *object)
     g_free (priv->title);
     g_free (priv->day);
 
-	g_object_unref (priv->cache);
+	g_clear_object (&priv->cache);
 
     G_OBJECT_CLASS (xkcd_object_parent_class)->finalize (object);
 }
@@ -273,9 +273,52 @@ xkcd_object_class_init (XkcdClass *klass)
 GdkPixbuf*
 xkcd_object_get_pixbuf_cache(Xkcd *self)
 {
+    g_return_val_if_fail (XKCD_IS_OBJECT (self), NULL);
+
     XkcdPrivate *priv = xkcd_object_get_instance_private (self);
 
     return priv->cache;
+}
+
+int
+xkcd_object_get_number (Xkcd *self)
+{
+    g_return_val_if_fail (XKCD_IS_OBJECT (self), 0);
+
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    return (priv->num);
+}
+
+void
+xkcd_object_set_number (Xkcd *self, int number)
+{
+    g_return_if_fail (XKCD_IS_OBJECT (self));
+
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    priv->num = number;
+}
+
+gchar*
+xkcd_object_get_img_link (Xkcd *self)
+{
+    g_return_val_if_fail (XKCD_IS_OBJECT (self), 0);
+
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    return priv->img;
+}
+
+void
+xkcd_object_set_pixbuf (Xkcd *self, GdkPixbuf *cache)
+
+{
+    g_return_if_fail (XKCD_IS_OBJECT (self));
+
+    XkcdPrivate *priv = xkcd_object_get_instance_private (self);
+
+    priv->cache = gdk_pixbuf_copy (cache);
 }
 
 static void

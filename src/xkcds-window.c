@@ -33,13 +33,6 @@ typedef struct
 
 G_DEFINE_TYPE_WITH_PRIVATE (XkcdsWindow, xkcds_window, GTK_TYPE_APPLICATION_WINDOW)
 
-enum {
-    PROP_0,
-    N_PROPS
-};
-
-static GParamSpec *properties [N_PROPS];
-
 XkcdsWindow *
 xkcds_window_new (XkcdsApplication *app)
 {
@@ -58,36 +51,6 @@ xkcds_window_finalize (GObject *object)
 }
 
 static void
-xkcds_window_get_property (GObject    *object,
-                           guint       prop_id,
-                           GValue     *value,
-                           GParamSpec *pspec)
-{
-    XkcdsWindow *self = XKCDS_WINDOW (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
-}
-
-static void
-xkcds_window_set_property (GObject      *object,
-                           guint         prop_id,
-                           const GValue *value,
-                           GParamSpec   *pspec)
-{
-    XkcdsWindow *self = XKCDS_WINDOW (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
-}
-
-static void
 xkcds_window_class_init (XkcdsWindowClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -100,17 +63,19 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
     //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASs (object_class), XkcdsWindow, prev);
 
     object_class->finalize = xkcds_window_finalize;
-    object_class->get_property = xkcds_window_get_property;
-    object_class->set_property = xkcds_window_set_property;
 }
 
 static void
 xkcds_window_init (XkcdsWindow *self)
 {
     XkcdsWindowPrivate *priv = xkcds_window_get_instance_private (self);
+
     gtk_widget_init_template (GTK_WIDGET (self));
+
     gtk_window_set_title (GTK_WINDOW (self), "Xkcds");
     gtk_window_set_resizable (GTK_WINDOW (self), FALSE);
-    xkcds_image_randomize (priv->xkcds_image);
+
     gtk_widget_show_all (GTK_WIDGET (self));
+
+    xkcds_image_randomize (priv->xkcds_image);
 }

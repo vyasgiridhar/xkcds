@@ -31,13 +31,6 @@ typedef struct
 
 G_DEFINE_TYPE_WITH_PRIVATE (XkcdsApplication, xkcds_application, GTK_TYPE_APPLICATION)
 
-enum {
-    PROP_0,
-    N_PROPS
-};
-
-static GParamSpec *properties [N_PROPS];
-
 XkcdsApplication *
 xkcds_application_new (void)
 {
@@ -74,39 +67,9 @@ xkcds_application_finalize (GObject *object)
     XkcdsApplication *self = (XkcdsApplication *)object;
     XkcdsApplicationPrivate *priv = xkcds_application_get_instance_private (self);
 
-    g_object_unref (priv->window);
+    g_clear_object (&priv->window);
 
     G_OBJECT_CLASS (xkcds_application_parent_class)->finalize (object);
-}
-
-static void
-xkcds_application_get_property (GObject    *object,
-                                guint       prop_id,
-                                GValue     *value,
-                                GParamSpec *pspec)
-{
-    XkcdsApplication *self = XKCDS_APPLICATION (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
-}
-
-static void
-xkcds_application_set_property (GObject      *object,
-                                guint         prop_id,
-                                const GValue *value,
-                                GParamSpec   *pspec)
-{
-    XkcdsApplication *self = XKCDS_APPLICATION (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
 }
 
 static void
@@ -117,9 +80,6 @@ xkcds_application_class_init (XkcdsApplicationClass *klass)
     object_class->finalize = xkcds_application_finalize;
     G_APPLICATION_CLASS (object_class)->open = xkcds_application_open;
     G_APPLICATION_CLASS (object_class)->activate = xkcds_application_activate;
-//  G_APPLICATION_CLASS (object_class)->open = xkcds_application_startup;
-    object_class->get_property = xkcds_application_get_property;
-    object_class->set_property = xkcds_application_set_property;
 }
 
 static void

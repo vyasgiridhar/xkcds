@@ -43,13 +43,6 @@ struct _XkcdsImage
 
 G_DEFINE_TYPE (XkcdsImage, xkcds_image, GTK_TYPE_STACK)
 
-enum {
-    PROP_0,
-    N_PROPS
-};
-
-static GParamSpec *properties [N_PROPS];
-
 XkcdsImage *
 xkcds_image_new (void)
 {
@@ -61,41 +54,10 @@ xkcds_image_finalize (GObject *object)
 {
     XkcdsImage *self = (XkcdsImage *)object;
 
-    g_object_unref (G_OBJECT (self->cancel_action));
-    g_object_unref (self->api);
+    g_clear_object (&self->api);
+    g_clear_object (&self->cancel_action);
 
-    self->cancel_action = NULL;
     G_OBJECT_CLASS (xkcds_image_parent_class)->finalize (object);
-}
-
-static void
-xkcds_image_get_property (GObject    *object,
-                          guint       prop_id,
-                          GValue     *value,
-                          GParamSpec *pspec)
-{
-    XkcdsImage *self = XKCDS_IMAGE (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
-}
-
-static void
-xkcds_image_set_property (GObject      *object,
-                          guint         prop_id,
-                          const GValue *value,
-                          GParamSpec   *pspec)
-{
-    XkcdsImage *self = XKCDS_IMAGE (object);
-
-    switch (prop_id)
-      {
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
 }
 
 static void
@@ -120,6 +82,7 @@ overlay_timeout_callback (gpointer data)
     gtk_revealer_set_reveal_child (GTK_REVEALER (self->randomize), FALSE);
 
     clear_overlay_timeout (self);
+
     return FALSE;
 }
 
@@ -175,9 +138,16 @@ xkcd_image_setter_callback (GObject      *source_object,
     XkcdApi *api = XKCD_API (source_object);
     XkcdsImage *image = data;
     GdkPixbuf *cache;
-    GError *error;
+    GError *error = NULL;
 
     xkcd = xkcd_api_load_finish (api, result, &error);
+    if (error)
+    {
+        g_critical ("Here %s", error->message);
+        g_clear_error (&error);
+        return;
+    }
+
     cache = xkcd_object_get_pixbuf_cache (xkcd);
 
     gtk_image_view_set_pixbuf (image->imageview,
@@ -189,15 +159,52 @@ xkcd_image_setter_callback (GObject      *source_object,
 void
 xkcds_image_randomize (XkcdsImage *self)
 {
+    int *movement = (int*) g_malloc (sizeof (int));
 
-    int *movement = 0;
+    g_cancellable_reset (self->cancel_action);
+    *movement = 0;
+
+    gtk_stack_set_visible_child_name (GTK_STACK (self), "spinner");
 
     xkcd_api_load_async (self->api,
                          movement,
                          self->cancel_action,
                          xkcd_image_setter_callback,
                          self);
+}
 
+static void
+xkcds_image_next (XkcdsImage *self)
+{
+    int *movement = (int*) g_malloc (sizeof (int));
+
+    g_cancellable_reset (self->cancel_action);
+    *movement = 1;
+
+    gtk_stack_set_visible_child_name (GTK_STACK (self), "spinner");
+
+    xkcd_api_load_async (self->api,
+                         movement,
+                         self->cancel_action,
+                         xkcd_image_setter_callback,
+                         self);
+}
+
+static void
+xkcds_image_prev (XkcdsImage *self)
+{
+    int *movement = (int*) g_malloc (sizeof (int));
+
+    g_cancellable_reset (self->cancel_action);
+    *movement = 1;
+
+    gtk_stack_set_visible_child_name (GTK_STACK (self), "spinner");
+
+    xkcd_api_load_async (self->api,
+                         movement,
+                         self->cancel_action,
+                         xkcd_image_setter_callback,
+                         self);
 }
 
 static void
@@ -215,8 +222,46 @@ xkcds_image_class_init (XkcdsImageClass *klass)
     gtk_widget_class_bind_template_child (GTK_WIDGET_CLASS (klass), XkcdsImage, image_event);
 
     object_class->finalize = xkcds_image_finalize;
-    object_class->get_property = xkcds_image_get_property;
-    object_class->set_property = xkcds_image_set_property;
+}
+
+static void
+next_xkcd_event (GtkButton *button, gpointer user_data)
+{
+    XkcdsImage *self = user_data;
+    int *movement = (int*) g_malloc (sizeof (int));
+
+    *movement = 2;
+    g_cancellable_cancel (self->cancel_action);
+
+    xkcds_image_next (self);
+}
+
+static void
+prev_xkcd_event (GtkButton *button, gpointer user_data)
+{
+    XkcdsImage *self = user_data;
+    int *movement = (int*) g_malloc (sizeof (int));
+
+    *movement = 1;
+    g_cancellable_cancel (self->cancel_action);
+
+    xkcds_image_prev (self);
+}
+
+static void
+randomize_xkcd_event (GtkButton *button, gpointer user_data)
+{
+    XkcdsImage *self = user_data;
+    int *movement = (int*) g_malloc (sizeof (int));
+
+    *movement = 3;
+    g_cancellable_cancel (self->cancel_action);
+
+    xkcd_api_load_async (self->api,
+                         movement,
+                         self->cancel_action,
+                         xkcd_image_setter_callback,
+                         self);
 }
 
 static void
@@ -268,6 +313,9 @@ xkcds_image_init (XkcdsImage *self)
     gtk_widget_set_tooltip_text (button, "Go to the next XKCD");
     gtk_style_context_add_class (gtk_widget_get_style_context (button),
                                  GTK_STYLE_CLASS_OSD);
+    g_signal_connect (button, "clicked",
+                      G_CALLBACK (next_xkcd_event),
+                      self);
 
     /* previous button */
     button = gtk_button_new_from_icon_name ("go-previous-symbolic", GTK_ICON_SIZE_BUTTON);
@@ -275,6 +323,9 @@ xkcds_image_init (XkcdsImage *self)
     gtk_widget_set_tooltip_text (button, "Go to the previous XKCD");
     gtk_style_context_add_class (gtk_widget_get_style_context (button),
                                  GTK_STYLE_CLASS_OSD);
+    g_signal_connect (button, "clicked",
+                      G_CALLBACK (prev_xkcd_event),
+                      self);
 
     /* randomize button */
     button = gtk_button_new_from_icon_name ("view-refresh", GTK_ICON_SIZE_BUTTON);
@@ -282,6 +333,9 @@ xkcds_image_init (XkcdsImage *self)
     gtk_widget_set_tooltip_text (button, "randomize");
     gtk_style_context_add_class (gtk_widget_get_style_context (button),
                                  GTK_STYLE_CLASS_OSD);
+    g_signal_connect (button, "clicked",
+                      G_CALLBACK (randomize_xkcd_event),
+                      self);
 
     g_signal_connect (self->image_event, "motion-notify-event",
                       G_CALLBACK (motion_notify_event),
