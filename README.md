@@ -7,6 +7,6 @@
 
 Random xkcds at your disposal
 
-![screenshot](https://imgur.com/NcrzZL0)
+![screenshot](https://i.imgur.com/NcrzZL0.png)
 
 Enjoy :D
