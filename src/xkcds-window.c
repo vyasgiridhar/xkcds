@@ -60,7 +60,6 @@ xkcds_window_class_init (XkcdsWindowClass *klass)
     gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (object_class), "/xyz/vyasgiridhar/xkcds/xkcds-window.ui");
 
     gtk_widget_class_bind_template_child_private (GTK_WIDGET_CLASS (object_class), XkcdsWindow, xkcds_image);
-    //gtk_widget_bind_from_template_child_private (GTK_WIDGET_CLASs (object_class), XkcdsWindow, prev);
 
     object_class->finalize = xkcds_window_finalize;
 }

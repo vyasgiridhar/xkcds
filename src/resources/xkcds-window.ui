@@ -18,24 +18,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="show_close_button">True</property>
-                <child>
-                    <object class="GtkMenuButton" id="gears">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="receives_default">False</property>
-                        <property name="direction">none</property>
-                        <child>
-                            <placeholder/>
-                        </child>
-                        <style>
-                            <class name="image-button"/>
-                        </style>
-                    </object>
-                    <packing>
-                        <property name="pack_type">end</property>
-                        <property name="position">1</property>
-                    </packing>
-                </child>
             </object>
         </child>
     </template>
